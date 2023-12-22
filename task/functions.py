@@ -1,6 +1,7 @@
 import pandas as pd
 import os.path
 import random
+from itertools import cycle, islice
 
 from psychopy import prefs
 prefs.hardware['audioLib'] = ['ptb']
@@ -67,10 +68,10 @@ def get_seq_num(LOG):
     seq_num = int(seq_num)
     return(seq_num)
 
-def get_condition_order():
-    conditions = [(2, 1, 2, 3, 1, 3), (2, 3, 1, 3, 1, 2), (1, 3, 1, 2, 3, 2), (3, 2, 1, 3, 2, 1), (1, 2, 3, 1, 2, 3), (2, 1, 3, 1, 3, 2), (3, 2, 1, 3, 1, 2), (2, 3, 2, 1, 3, 1), (3, 1, 3, 2, 1, 2), (1, 2, 3, 1, 3, 2), (2, 3, 1, 2, 3, 1), (2, 3, 1, 2, 1, 3), (2, 1, 3, 2, 3, 1), (2, 1, 3, 2, 1, 3), (2, 3, 1, 3, 2, 1), (3, 1, 2, 1, 2, 3), (3, 2, 1, 2, 3, 1), (3, 2, 1, 2, 1, 3), (2, 1, 3, 1, 2, 3), (3, 1, 2, 3, 2, 1), (3, 1, 2, 1, 3, 2), (1, 2, 3, 2, 1, 3), (1, 2, 3, 2, 3, 1), (3, 1, 2, 3, 1, 2), (1, 3, 2, 1, 2, 3), (1, 3, 2, 3, 2, 1), (1, 3, 2, 1, 3, 2), (3, 2, 3, 1, 2, 1), (1, 3, 2, 3, 1, 2), (1, 2, 1, 3, 2, 3)]
-    i = random.randint(0, len(conditions)-1)
-    return conditions[i]
+def get_predictability_order():
+    predictability_orders = [(True, False, True, False), (False, True, False, True)]
+    predictability_order = random.choice(predictability_orders)
+    return predictability_order
 
 def get_n_tones(SEQ_LENS):
     n_tones = random.choice(SEQ_LENS)
@@ -96,7 +97,7 @@ def hear_tones(WIN, TONE_LEN, FREQS):
     p2 = Sound(FREQS[1], secs = TONE_LEN)
     p3 = Sound(FREQS[2], secs = TONE_LEN)
 
-    p1_txt = visual.TextStim(WIN, text = "You will be listening to random sequences of three different tones. Your job will be to count how many times you hear the target tone in each sequence. You will now hear the target tone and the two distractor tones. Press 'enter' to hear the target tone now. You will also get a chance to play the target tone at the beginning of each trial.")
+    p1_txt = visual.TextStim(WIN, text = "You will be listening to random sequences of three different tones. Your job will be to count how many times you hear the target tone in each sequence. You will now hear a sample of each of the three tones. Press 'enter' to hear the first tone now.")
     p1_txt.draw()
     WIN.flip()
     event.waitKeys(keyList = ['return'])
@@ -121,7 +122,7 @@ def hear_tones(WIN, TONE_LEN, FREQS):
     core.wait(1)
 
 def instructions(WIN):
-    instruction1_text = visual.TextStim(WIN, text = "In each trial you will be asked to count the number of times you hear the target tone. At the beginning of each trial you will get the chance to listen to the target tone as many times as you like. Pay close attention as the target tone will change every block. You will be asked how many times you heard the target tone at the end of each sequence. If you accurately report the number of target tones–or come close to the actual number of target tones–your 'score' will increase by 1. To finish each block, you will have to reach a score of 20. Please ask your experimenter any questions you may have about the task. Press 'enter' to continue...")
+    instruction1_text = visual.TextStim(WIN, text = "In each trial you will be asked to count the number of times you hear the target tone. At the beginning of each trial you will get the chance to listen to the target tone as many times as you like. Pay close attention as the target tone will change every trial. You will be asked how many times you heard the target tone at the end of each sequence. If you accurately report the number of target tones–or come close to the actual number of target tones–your 'score' will increase by 1. To finish each block, you will have to reach a score of 20. Please ask your experimenter any questions you may have about the task. Press 'enter' to continue...")
     event.clearEvents(eventType = None)
     instruction1_text.draw()
     WIN.flip()
@@ -181,7 +182,7 @@ def ready(WIN):
     event.waitKeys(keyList = ['return'])
     WIN.flip()
 
-def play_sequence(MARKER, FREQS, TONE_LEN, ISI, target, n_tones):
+def play_random_sequence(MARKER, FREQS, TONE_LEN, ISI, target, n_tones):
     n_targets = 0
     force = False
     one_back = 0
@@ -197,10 +198,10 @@ def play_sequence(MARKER, FREQS, TONE_LEN, ISI, target, n_tones):
         if not force:
             i = random.randint(0, len(FREQS)-1)
         freq = FREQS[i]
-        mark = get_mark(condition, freq)
+        mark = get_mark(predictable, i)
         snd = Sound(freq, secs = TONE_LEN)
 
-        # increment
+        # increment target count
         is_target, n_targets = check_target(freq, target, n_targets)
 
         # schedule sound
@@ -225,10 +226,74 @@ def play_sequence(MARKER, FREQS, TONE_LEN, ISI, target, n_tones):
     print('')
     return(tone_nums, freqs, marks, is_targets, n_targets)
 
-def get_mark(condition, freq):
-    tone_mark_dict = {90:1, 128: 2, 200: 3, 280: 4, 350: 5}
-    tone_mark = tone_mark_dict[freq]
-    mark = int(str(condition) + str(tone_mark))
+def get_starting_point(pattern, target):
+    i = random.randint(0, len(pattern)-1)
+    while pattern[i] == target:
+        i = random.randint(0, len(pattern)-1)
+    return i
+
+def get_predictable_sequence(FREQS, target, n_tones):
+    # Generate the pattern
+    sequence_pattern = [FREQS[0], FREQS[0], FREQS[1], FREQS[1], FREQS[2], FREQS[2]]
+    
+    # Pick a random starting point that is not the target tone
+    start_i = get_starting_point(pattern, target)
+            
+    # Generate patterns from the starting index
+    for i, tone in enumerate(pattern):
+        if start_i = i:
+            sequence = list(islice(cycle(sequence_pattern), i+1, i+1+n_tones))
+            
+    return seqeunce
+    
+def play_predictable_sequence(MARKER, FREQS, TONE_LEN, ISI, target, n_tones):
+    n_targets = 0
+    force = False
+    one_back = 0
+    two_back = 0
+    
+    tone_nums = []
+    freqs = []
+    marks = []
+    is_targets = []
+    
+    sequence = get_predictable_sequence(FREQS, target, n_tones)
+    tone_num = 1
+    for freq in sequence:
+        print(tone_num, end = ', ', flush = True)
+        mark = get_mark(predictable, FREQS.index(freq))
+        snd = Sound(freq, secs = TONE_LEN)
+
+        # increment target count
+        is_target, n_targets = check_target(freq, target, n_targets)
+
+        # schedule sound
+        now = GetSecs()
+        snd.play(when = now + 0.1)
+        WaitSecs(0.1)
+        MARKER.send(mark)
+        WaitSecs(TONE_LEN)
+
+        # Add ISI - buffer + jitter
+        WaitSecs(ISI - 0.1 + random.uniform(0, 0.5))
+
+        # save tone info
+        tone_nums.append(tone_num)
+        freqs.append(freq)
+        marks.append(mark)
+        is_targets.append(is_target)
+        
+        # increment tone number
+        tone += 1
+
+    print('')
+    return(tone_nums, freqs, marks, is_targets, n_targets)
+
+def get_mark(predictable, i):
+    predictable_mark = int(predictable) + 1 # predictable is True, then mark is 2
+                                            # predictable is false, then mark is 1
+    tone_mark = i + 1
+    mark = int(str(predictable_mark) + str(tone_mark))
     return(mark)
 
 def play_first_tone(MARKER, TONE_LEN, ISI, FREQS):
@@ -284,13 +349,14 @@ def broadcast(n_tones, var):
         broadcasted_array = [var]*n_tones
     return(broadcasted_array)
 
-def write_log(LOG, n_tones, SEED, SUB_NUM, BLOCK_NUM, seq_num, target, n_target_plays, tone_nums,
-              freqs, marks, is_targets, n_targets, response, correct, score):
+def write_log(LOG, n_tones, SEED, SUB_NUM, BLOCK_NUM, predictable, seq_num, target, n_target_plays, 
+              tone_nums, freqs, marks, is_targets, n_targets, response, correct, score):
     print("Writing to log file")
     d = {
         'seed': broadcast(n_tones, SEED),
         'sub_num': broadcast(n_tones, SUB_NUM),
         'block_num': broadcast(n_tones, BLOCK_NUM),
+        'predictable': broadcast(n_tones, predictable),
         'seq_num': broadcast(n_tones, seq_num),
         'target': broadcast(n_tones, target),
         'n_target_plays': broadcast(n_tones, n_target_plays),

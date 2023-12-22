@@ -4,19 +4,14 @@ from events import EventMarker
 from functions import *
 
 # constants
-COND_FREQS = {1: [128, 200, 280], 
-         2: [128, 90, 200],
-         3: [200, 280, 350]}
+FREQS = [110, 150, 210]
     # Tags should be AB,
-    # where A is condition number 1, 2, or 3, 
-    # where B is tone number where 90 Hz = 1, 128 = 2, 200 = 3, 280 = 4, 350 = 5
-TARGETS = {1: 128,
-           2: 128,
-           3: 200}
-SEQ_LENS = [36, 40, 44]
+    # where A is predictability where random = 1, predictable = 2
+    # where B is tone number where 110 = 1, 150 = 2, 210 = 3
+SEQ_LENS = [46, 50, 54]
 TONE_LEN = 0.3
 ISI = 0.3
-SCORE_NEEDED = 20
+SCORE_NEEDED = 25
 
 # ask for subject and block number
 SUB_NUM = input("Input subject number: ")
@@ -45,10 +40,8 @@ seq_num = get_seq_num(LOG)
 print(f"seq_num: {seq_num}")
 
 # randomly select condition
-conditions = get_condition_order()
-condition = conditions[int(BLOCK_NUM) - 1]
-FREQS = COND_FREQS[condition]
-target = TARGETS[condition]
+predictability_order = get_predictability_order()
+predictable = predictability_order[int(BLOCK_NUM) - 1] # boolean
 
 # listen to all three tones and display instructions
 welcome(WIN, BLOCK_NUM) 
@@ -57,6 +50,7 @@ instructions(WIN)
 
 # practice trial
 while score < 1:
+    target = get_target(FREQS)
 
     # Play target
     n_target_plays = play_target(WIN, TONE_LEN, target)
@@ -66,7 +60,12 @@ while score < 1:
     # Play tones
     fixation(WIN)
     WaitSecs(1)
-    tone_nums, freqs, marks, is_targets, n_targets = play_sequence(MARKER, FREQS, TONE_LEN, ISI, condition, target, 40)
+    if predictable:
+        tone_nums, freqs, marks, is_targets, n_targets = play_predictable_sequence(
+            MARKER, FREQS, TONE_LEN, ISI, condition, target, 30)
+    else:
+        tone_nums, freqs, marks, is_targets, n_targets = play_random_sequence(
+            MARKER, FREQS, TONE_LEN, ISI, condition, target, 30)
     WIN.flip()
     WaitSecs(0.5)
 
@@ -80,6 +79,7 @@ end_practice(WIN)
 # play sequences until SCORE_NEEDED is reached or seq_num >= 25
 while score < SCORE_NEEDED:
     n_tones = get_n_tones(SEQ_LENS)
+    target = get_target(FREQS)
 
     # Play target
     n_target_plays = play_target(WIN, TONE_LEN, target)
@@ -89,8 +89,12 @@ while score < SCORE_NEEDED:
     # Play tones
     fixation(WIN)
     WaitSecs(1)
-    tone_nums, freqs, marks, is_targets, n_targets = play_sequence(MARKER, FREQS, TONE_LEN, ISI, condition, target, n_tones)
-    WIN.flip()
+    if predictable:
+        tone_nums, freqs, marks, is_targets, n_targets = play_predictable_sequence(
+            MARKER, FREQS, TONE_LEN, ISI, target, 30)
+    else:
+        tone_nums, freqs, marks, is_targets, n_targets = play_random_sequence(
+            MARKER, FREQS, TONE_LEN, ISI, target, 30)    WIN.flip()
     WaitSecs(0.5)
 
     # Get response
@@ -103,7 +107,7 @@ while score < SCORE_NEEDED:
     print(f'seq_num: {seq_num}')
 
     # Write log file
-    write_log(LOG, n_tones, SEED, SUB_NUM, BLOCK_NUM, seq_num, target, n_target_plays, tone_nums,
+    write_log(LOG, n_tones, SEED, SUB_NUM, BLOCK_NUM, predictable, seq_num, target, n_target_plays, tone_nums,
               freqs, marks, is_targets, n_targets, response, correct, score)
     WaitSecs(1)
     
