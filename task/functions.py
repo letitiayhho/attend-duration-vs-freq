@@ -87,7 +87,7 @@ def welcome(WIN, BLOCK_NUM):
     if BLOCK_NUM == '1':
         welcome_text = visual.TextStim(WIN, text = f"Welcome to the study. Press 'enter' to continue.")
     else:
-        welcome_text = visual.TextStim(WIN, text = f"Welcome to block number {BLOCK_NUM}/6. Press 'enter' to continue.")
+        welcome_text = visual.TextStim(WIN, text = f"Welcome to block number {BLOCK_NUM}/4. Please remember to minimize any movement and blinks. Please keep your gaze fixed on the + when it appears. Press 'enter' to continue.")
     welcome_text.draw()
     WIN.flip()
     event.waitKeys(keyList = ['return'])
@@ -97,7 +97,7 @@ def hear_tones(WIN, TONE_LEN, FREQS):
     p2 = Sound(FREQS[1], secs = TONE_LEN)
     p3 = Sound(FREQS[2], secs = TONE_LEN)
 
-    p1_txt = visual.TextStim(WIN, text = "You will be listening to random sequences of three different tones. Your job will be to count how many times you hear the target tone in each sequence. You will now hear a sample of each of the three tones. Press 'enter' to hear the first tone now.")
+    p1_txt = visual.TextStim(WIN, text = "You will be listening to random sequences of three different tones. You will now hear a sample of each of the three tones. Press 'enter' to hear the first tone now.")
     p1_txt.draw()
     WIN.flip()
     event.waitKeys(keyList = ['return'])
@@ -121,30 +121,38 @@ def hear_tones(WIN, TONE_LEN, FREQS):
     p3.play()
     core.wait(1)
 
-def instructions(WIN):
-    instruction1_text = visual.TextStim(WIN, text = "In each trial you will be asked to count the number of times you hear the target tone. At the beginning of each trial you will get the chance to listen to the target tone as many times as you like. Pay close attention as the target tone will change every trial. You will be asked how many times you heard the target tone at the end of each sequence. If you accurately report the number of target tones–or come close to the actual number of target tones–your 'score' will increase by 1. To finish each block, you will have to reach a score of 20. Please ask your experimenter any questions you may have about the task. Press 'enter' to continue...")
+def instructions(WIN, SCORE_NEEDED):
+    instruction1_text = visual.TextStim(WIN, text = "At the beginning of each trial, one of the three tones will be randomly selected to be the 'target tone'. You will be asked to count the number of times you hear the target tone. At the beginning of each trial you will get the chance to listen to the target tone as many times as you like. Press 'enter' to continue...")
     event.clearEvents(eventType = None)
     instruction1_text.draw()
     WIN.flip()
     event.waitKeys(keyList = ['return'])
     WIN.flip()
-    print('instruction2')
+    print('instruction1')
     
-    instruction2_text = visual.TextStim(WIN, text = "It is important for you not to move your eyes or blink while the tones are playing. We also ask that you hold the rest of your body as still as possible. To help with this, a fixation cross '+' will be shown during the tone sequence. Keep your gaze on the fixation cross and hold your body and gaze as still as you can while the cross is on the screen. Press 'enter' to continue...")
+    instruction2_text = visual.TextStim(WIN, text = f"At the end of each trial you will be asked how many times you heard the target tone during the trial. If you accurately report the number of target tones– or come close to the actual number of target tones by 2– your 'score' will increase by 1. To finish each block, you will have to reach a score of {SCORE_NEEDED}. There will be 4 total blocks. Please ask your experimenter any questions you may have about the task. Press 'enter' to continue...")
     event.clearEvents(eventType = None)
     instruction2_text.draw()
     WIN.flip()
     event.waitKeys(keyList = ['return'])
     WIN.flip()
     print('instruction2')
-
-    instruction3_text = visual.TextStim(WIN, text = "You will now complete one practice trial before the block begins. Press 'enter' to begin the practice trial...")
+    
+    instruction3_text = visual.TextStim(WIN, text = "It is important for you not to move your eyes or blink while the tones are playing. We also ask that you hold the rest of your body as still as possible. To help with this, a fixation cross '+' will be shown during the tone sequence. Keep your gaze on the fixation cross and hold your body and gaze as still as you can while the cross is on the screen. Press 'enter' to continue...")
     event.clearEvents(eventType = None)
-    instruction2_text.draw()
+    instruction3_text.draw()
     WIN.flip()
     event.waitKeys(keyList = ['return'])
     WIN.flip()
     print('instruction3')
+
+    instruction4_text = visual.TextStim(WIN, text = "You will now complete one practice trial before experiment blocks begin. Press 'enter' to begin the practice trial...")
+    event.clearEvents(eventType = None)
+    instruction4_text.draw()
+    WIN.flip()
+    event.waitKeys(keyList = ['return'])
+    WIN.flip()
+    print('instruction4')
 
 def end_practice(WIN):
     instruction1_text = visual.TextStim(WIN, text = "Thank you for completing the practice trial. Press 'enter' to proceed to the experiment trials.")
@@ -182,7 +190,7 @@ def ready(WIN):
     event.waitKeys(keyList = ['return'])
     WIN.flip()
 
-def play_random_sequence(MARKER, FREQS, TONE_LEN, ISI, target, n_tones):
+def play_random_sequence(MARKER, FREQS, TONE_LEN, ISI, predictable, target, n_tones):
     n_targets = 0
     force = False
     one_back = 0
@@ -208,11 +216,11 @@ def play_random_sequence(MARKER, FREQS, TONE_LEN, ISI, target, n_tones):
         now = GetSecs()
         snd.play(when = now + 0.1)
         WaitSecs(0.1)
-        MARKER.send(mark)
+        #MARKER.send(mark)
         WaitSecs(TONE_LEN)
 
         # Add ISI - buffer + jitter
-        WaitSecs(ISI - 0.1 + random.uniform(0, 0.5))
+        WaitSecs(ISI - 0.1 + random.uniform(0, 0.05))
 
         # save tone info
         tone_nums.append(tone_num)
@@ -232,21 +240,20 @@ def get_starting_point(pattern, target):
         i = random.randint(0, len(pattern)-1)
     return i
 
-def get_predictable_sequence(FREQS, target, n_tones):
-    # Generate the pattern
-    sequence_pattern = [FREQS[0], FREQS[0], FREQS[1], FREQS[1], FREQS[2], FREQS[2]]
+def get_predictable_sequence(FREQS, PATTERN, target, n_tones):
     
     # Pick a random starting point that is not the target tone
-    start_i = get_starting_point(pattern, target)
+    start_i = get_starting_point(PATTERN, target)
             
     # Generate patterns from the starting index
-    for i, tone in enumerate(pattern):
-        if start_i = i:
-            sequence = list(islice(cycle(sequence_pattern), i+1, i+1+n_tones))
+    for i, tone in enumerate(PATTERN):
+        if start_i == i:
+            sequence = list(islice(cycle(PATTERN), i+1, i+1+n_tones))
             
-    return seqeunce
+    print(f'sequence: {sequence}')
+    return sequence
     
-def play_predictable_sequence(MARKER, FREQS, TONE_LEN, ISI, target, n_tones):
+def play_predictable_sequence(MARKER, FREQS, TONE_LEN, ISI, PATTERN, predictable, target, n_tones):
     n_targets = 0
     force = False
     one_back = 0
@@ -257,7 +264,7 @@ def play_predictable_sequence(MARKER, FREQS, TONE_LEN, ISI, target, n_tones):
     marks = []
     is_targets = []
     
-    sequence = get_predictable_sequence(FREQS, target, n_tones)
+    sequence = get_predictable_sequence(FREQS, PATTERN, target, n_tones)
     tone_num = 1
     for freq in sequence:
         print(tone_num, end = ', ', flush = True)
@@ -271,11 +278,11 @@ def play_predictable_sequence(MARKER, FREQS, TONE_LEN, ISI, target, n_tones):
         now = GetSecs()
         snd.play(when = now + 0.1)
         WaitSecs(0.1)
-        MARKER.send(mark)
+        #MARKER.send(mark)
         WaitSecs(TONE_LEN)
 
         # Add ISI - buffer + jitter
-        WaitSecs(ISI - 0.1 + random.uniform(0, 0.5))
+        WaitSecs(ISI - 0.1 + random.uniform(0, 0.05))
 
         # save tone info
         tone_nums.append(tone_num)
@@ -284,7 +291,7 @@ def play_predictable_sequence(MARKER, FREQS, TONE_LEN, ISI, target, n_tones):
         is_targets.append(is_target)
         
         # increment tone number
-        tone += 1
+        tone_num += 1
 
     print('')
     return(tone_nums, freqs, marks, is_targets, n_targets)
@@ -309,11 +316,11 @@ def play_first_tone(MARKER, TONE_LEN, ISI, FREQS):
     snd = Sound(freq, secs = TONE_LEN)
     snd.play(when = now + 0.1) # 0.1 msec buffer
     WaitSecs(0.1)
-    MARKER.send(mark)
+    #MARKER.send(mark)
     WaitSecs(TONE_LEN)
 
     # Add ISI - buffer + jitter
-    WaitSecs(ISI - 0.1 + random.uniform(0, 0.5))
+    WaitSecs(ISI - 0.1 + random.uniform(0, 0.05))
 
     tone_nums = [1]
     freqs = [freq]
