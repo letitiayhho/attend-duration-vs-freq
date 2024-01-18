@@ -104,7 +104,7 @@ def hear_tones(WIN, TONE_LEN, FREQS):
     p1.play()
     core.wait(1)
 
-    p2_txt = visual.TextStim(WIN, text = "Press 'enter' to hear first distractor tone.")
+    p2_txt = visual.TextStim(WIN, text = "Press 'enter' to hear second distractor tone.")
     event.clearEvents(eventType = None)
     p2_txt.draw()
     WIN.flip()
@@ -112,7 +112,7 @@ def hear_tones(WIN, TONE_LEN, FREQS):
     p2.play()
     core.wait(1)
 
-    p3_txt = visual.TextStim(WIN, text = "Press 'enter' to hear second distractor tone.")
+    p3_txt = visual.TextStim(WIN, text = "Press 'enter' to hear third distractor tone.")
 
     event.clearEvents(eventType = None)
     p3_txt.draw()
