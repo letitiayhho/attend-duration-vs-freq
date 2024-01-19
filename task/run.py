@@ -26,15 +26,14 @@ print("Current seed: " + str(SEED))
 random.seed(SEED)
 
 # set up keyboard, window and RTBox
-WIN = visual.Window(size = (600, 400), # (1920, 1080)
+WIN = visual.Window(#size = (1600, 900) # 1600, 900
     screen = -1,
     units = "norm",
-    fullscr = False,
+    fullscr = True,
     pos = (0, 0),
     allowGUI = False)
-#KB = get_keyboard('Dell Dell USB Entry Keyboard')
-#MARKER = EventMarker()
-MARKER = []
+KB = get_keyboard('Dell USB Keyboard')
+MARKER = EventMarker()
 
 # open log file
 LOG = open_log(SUB_NUM, BLOCK_NUM)

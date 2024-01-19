@@ -197,7 +197,7 @@ def play_random_sequence(MARKER, FREQS, TONE_LEN, ISI, predictable, target, n_to
     two_back = 0
 
     # play first tone
-    tone_nums, freqs, marks, is_targets = play_first_tone(MARKER, TONE_LEN, ISI, FREQS)
+    tone_nums, freqs, marks, is_targets = play_first_tone(MARKER, FREQS, TONE_LEN, ISI, predictable, target)
 
     for tone_num in range(2, n_tones + 1):
         print(tone_num, end = ', ', flush = True)
@@ -206,7 +206,7 @@ def play_random_sequence(MARKER, FREQS, TONE_LEN, ISI, predictable, target, n_to
         if not force:
             i = random.randint(0, len(FREQS)-1)
         freq = FREQS[i]
-        mark = get_mark(predictable, i)
+        mark = get_mark(FREQS, predictable, target, i)
         snd = Sound(freq, secs = TONE_LEN)
 
         # increment target count
@@ -216,7 +216,7 @@ def play_random_sequence(MARKER, FREQS, TONE_LEN, ISI, predictable, target, n_to
         now = GetSecs()
         snd.play(when = now + 0.1)
         WaitSecs(0.1)
-        #MARKER.send(mark)
+        MARKER.send(mark)
         WaitSecs(TONE_LEN)
 
         # Add ISI - buffer + jitter
@@ -268,7 +268,7 @@ def play_predictable_sequence(MARKER, FREQS, TONE_LEN, ISI, PATTERN, predictable
     tone_num = 1
     for freq in sequence:
         print(tone_num, end = ', ', flush = True)
-        mark = get_mark(predictable, FREQS.index(freq))
+        mark = get_mark(FREQS, predictable, target, FREQS.index(freq))
         snd = Sound(freq, secs = TONE_LEN)
 
         # increment target count
@@ -278,7 +278,7 @@ def play_predictable_sequence(MARKER, FREQS, TONE_LEN, ISI, PATTERN, predictable
         now = GetSecs()
         snd.play(when = now + 0.1)
         WaitSecs(0.1)
-        #MARKER.send(mark)
+        MARKER.send(mark)
         WaitSecs(TONE_LEN)
 
         # Add ISI - buffer + jitter
@@ -296,27 +296,65 @@ def play_predictable_sequence(MARKER, FREQS, TONE_LEN, ISI, PATTERN, predictable
     print('')
     return(tone_nums, freqs, marks, is_targets, n_targets)
 
-def get_mark(predictable, i):
-    predictable_mark = int(predictable) + 1 # predictable is True, then mark is 2
-                                            # predictable is false, then mark is 1
+def get_mark(FREQS, predictable, target, i):
+    # three values: ABC
+    # A: predictable is True, then A = 2
+    # 	 predictable is False, then mark A = 1
+    # B: if target tone is 110 Hz then B = 1
+    #    if target tone is 150 Hz B = 2
+    #    if target tone is 150, B = 2
+    # C: if tone is 110 Hz then C = 1
+    #    if tone is 150 Hz then C = 2
+    #    if tone is 210 Hz then C = 3
+
+    # Get A
+    predictable_mark = int(predictable) + 1 
+
+    # Get B
+    target_mark = FREQS.index(target) + 1
+
+    # Get C
     tone_mark = i + 1
-    mark = int(str(predictable_mark) + str(tone_mark))
+    mark = int(str(predictable_mark) + str(target_mark) + str(tone_mark))
     return(mark)
 
-def play_first_tone(MARKER, TONE_LEN, ISI, FREQS):
+    # three values: ABC
+    # A: predictable is True, and target is 110 Hz then A = 1
+    # 	 predictable is True, and target is 150 Hz then mark A = 2
+    # 	 predictable is True, and target is 210 Hz then mark A = 3
+    # 	 predictable is False, and target is 110 Hz then mark A = 4
+    # 	 predictable is False, and target is 150 Hz then mark A = 5
+    # 	 predictable is False, and target is 210 Hz then mark A = 6
+    # B: if tone is 110 Hz then C = 1
+    #    if tone is 150 Hz then C = 2
+    #    if tone is 210 Hz then C = 3
+
+    # Get A
+    # target_mark = FREQS.index(target) + 1
+    # if predictable:
+    #    predictable_and_target_mark = target_mark
+    # else:
+    #    predictable_and_target_mark = 3 + target_mark
+
+    # Get B
+    # tone_mark = i + 1
+    # mark = int(str(predictable_and_target_mark) + str(tone_mark))
+    # return(mark)
+
+def play_first_tone(MARKER, FREQS, TONE_LEN, ISI, predictable, target):
     print('1', end = ', ', flush = True)
 
     indexes = [1, 2]
     i = random.choice(indexes)
     freq = FREQS[i]
-    mark = get_mark(condition, freq)
+    mark = get_mark(FREQS, predictable, target, i)
 
     # schedule sound
     now = GetSecs()
     snd = Sound(freq, secs = TONE_LEN)
     snd.play(when = now + 0.1) # 0.1 msec buffer
     WaitSecs(0.1)
-    #MARKER.send(mark)
+    MARKER.send(mark)
     WaitSecs(TONE_LEN)
 
     # Add ISI - buffer + jitter
