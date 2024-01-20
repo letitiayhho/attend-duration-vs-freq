@@ -62,7 +62,7 @@ def get_seq_num(LOG):
     log = pd.read_csv(LOG)
     seq_nums = log['seq_num']
     if len(seq_nums) == 0:
-        seq_num = 0
+        seq_num = 1
     else:
         seq_num = seq_nums.iloc[-1]
     seq_num = int(seq_num)
@@ -87,7 +87,7 @@ def welcome(WIN, BLOCK_NUM):
     if BLOCK_NUM == '1':
         welcome_text = visual.TextStim(WIN, text = f"Welcome to the study. Press 'enter' to continue.")
     else:
-        welcome_text = visual.TextStim(WIN, text = f"Welcome to block number {BLOCK_NUM}/4. Please remember to minimize any movement and blinks. Please keep your gaze fixed on the + when it appears. Press 'enter' to continue.")
+        welcome_text = visual.TextStim(WIN, text = f"Welcome to block number {BLOCK_NUM}/4. Please remember to minimize any movement and blinks. Please keep your gaze fixed on the + when it appears. Press 'enter' to begin.")
     welcome_text.draw()
     WIN.flip()
     event.waitKeys(keyList = ['return'])
@@ -104,7 +104,7 @@ def hear_tones(WIN, TONE_LEN, FREQS):
     p1.play()
     core.wait(1)
 
-    p2_txt = visual.TextStim(WIN, text = "Press 'enter' to hear second distractor tone.")
+    p2_txt = visual.TextStim(WIN, text = "Press 'enter' to hear second tone.")
     event.clearEvents(eventType = None)
     p2_txt.draw()
     WIN.flip()
@@ -112,7 +112,7 @@ def hear_tones(WIN, TONE_LEN, FREQS):
     p2.play()
     core.wait(1)
 
-    p3_txt = visual.TextStim(WIN, text = "Press 'enter' to hear third distractor tone.")
+    p3_txt = visual.TextStim(WIN, text = "Press 'enter' to hear third tone.")
 
     event.clearEvents(eventType = None)
     p3_txt.draw()
@@ -130,7 +130,7 @@ def instructions(WIN, SCORE_NEEDED):
     WIN.flip()
     print('instruction1')
     
-    instruction2_text = visual.TextStim(WIN, text = f"At the end of each trial you will be asked how many times you heard the target tone during the trial. If you accurately report the number of target tones– or come close to the actual number of target tones by 2– your 'score' will increase by 1. To finish each block, you will have to reach a score of {SCORE_NEEDED}. There will be 4 total blocks. Please ask your experimenter any questions you may have about the task. Press 'enter' to continue...")
+    instruction2_text = visual.TextStim(WIN, text = f"At the end of each trial you will be asked how many times you heard the target tone during the trial. Use the number keys at the top of the keyboard to input your answer and then press 'enter' to submit it. Press 'enter' to continue...")
     event.clearEvents(eventType = None)
     instruction2_text.draw()
     WIN.flip()
@@ -138,7 +138,7 @@ def instructions(WIN, SCORE_NEEDED):
     WIN.flip()
     print('instruction2')
     
-    instruction3_text = visual.TextStim(WIN, text = "It is important for you not to move your eyes or blink while the tones are playing. We also ask that you hold the rest of your body as still as possible. To help with this, a fixation cross '+' will be shown during the tone sequence. Keep your gaze on the fixation cross and hold your body and gaze as still as you can while the cross is on the screen. Press 'enter' to continue...")
+    instruction3_text = visual.TextStim(WIN, text = f"At the end of each trial you will be asked how many times you heard the target tone during the trial. If you accurately report the number of target tones– or come close to the actual number of target tones by 2– your 'score' will increase by 1. To finish each block, you will have to reach a score of {SCORE_NEEDED}. There will be 4 total blocks. Please ask your experimenter any questions you may have about the task. Press 'enter' to continue...")
     event.clearEvents(eventType = None)
     instruction3_text.draw()
     WIN.flip()
@@ -146,13 +146,21 @@ def instructions(WIN, SCORE_NEEDED):
     WIN.flip()
     print('instruction3')
 
-    instruction4_text = visual.TextStim(WIN, text = "You will now complete one practice trial before experiment blocks begin. Press 'enter' to begin the practice trial...")
+    instruction4_text = visual.TextStim(WIN, text = "It is important for you not to move your eyes or blink while the tones are playing. We also ask that you hold the rest of your body as still as possible. To help with this, a fixation cross '+' will be shown during the tone sequence. Keep your gaze on the fixation cross and hold your body and gaze as still as you can while the cross is on the screen. Press 'enter' to continue...")
     event.clearEvents(eventType = None)
     instruction4_text.draw()
     WIN.flip()
     event.waitKeys(keyList = ['return'])
     WIN.flip()
     print('instruction4')
+
+    instruction5_text = visual.TextStim(WIN, text = "You will now complete one practice trial before experiment blocks begin. Press 'enter' to begin the practice trial...")
+    event.clearEvents(eventType = None)
+    instruction5_text.draw()
+    WIN.flip()
+    event.waitKeys(keyList = ['return'])
+    WIN.flip()
+    print('instruction5')
 
 def end_practice(WIN):
     instruction1_text = visual.TextStim(WIN, text = "Thank you for completing the practice trial. Press 'enter' to proceed to the experiment trials.")
@@ -308,15 +316,15 @@ def get_mark(FREQS, predictable, target, i):
     #    if tone is 210 Hz then C = 3
 
     # Get A
-    predictable_mark = int(predictable) + 1 
+    #predictable_mark = int(predictable) + 1 
 
     # Get B
-    target_mark = FREQS.index(target) + 1
+    #target_mark = FREQS.index(target) + 1
 
     # Get C
-    tone_mark = i + 1
-    mark = int(str(predictable_mark) + str(target_mark) + str(tone_mark))
-    return(mark)
+    #tone_mark = i + 1
+    #mark = int(str(predictable_mark) + str(target_mark) + str(tone_mark))
+    #return(mark)
 
     # three values: ABC
     # A: predictable is True, and target is 110 Hz then A = 1
@@ -330,16 +338,16 @@ def get_mark(FREQS, predictable, target, i):
     #    if tone is 210 Hz then C = 3
 
     # Get A
-    # target_mark = FREQS.index(target) + 1
-    # if predictable:
-    #    predictable_and_target_mark = target_mark
-    # else:
-    #    predictable_and_target_mark = 3 + target_mark
+    target_mark = FREQS.index(target) + 1
+    if predictable:
+        predictable_and_target_mark = target_mark
+    else:
+        predictable_and_target_mark = 3 + target_mark
 
     # Get B
-    # tone_mark = i + 1
-    # mark = int(str(predictable_and_target_mark) + str(tone_mark))
-    # return(mark)
+    tone_mark = i + 1
+    mark = int(str(predictable_and_target_mark) + str(tone_mark))
+    return(mark)
 
 def play_first_tone(MARKER, FREQS, TONE_LEN, ISI, predictable, target):
     print('1', end = ', ', flush = True)

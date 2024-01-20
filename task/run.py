@@ -15,10 +15,11 @@ SEQ_LENS = [46, 50, 54]
 TONE_LEN = 0.3
 ISI = 0.3
 SCORE_NEEDED = 25
+PRACTICE_SCORE_NEEDED = 1
 
 # ask for subject and block number
 SUB_NUM = input("Input subject number: ")
-BLOCK_NUM = input("Input block number (1-6): ")
+BLOCK_NUM = input("Input block number (1-4): ")
 
 # set subject number and block as seed
 SEED = int(SUB_NUM + "0" + BLOCK_NUM)
@@ -32,7 +33,7 @@ WIN = visual.Window(#size = (1600, 900) # 1600, 900
     fullscr = True,
     pos = (0, 0),
     allowGUI = False)
-KB = get_keyboard('Dell USB Keyboard')
+#KB = get_keyboard('Dell USB Keyboard')
 MARKER = EventMarker()
 
 # open log file
@@ -48,45 +49,44 @@ predictable = predictability_order[int(BLOCK_NUM) - 1] # boolean
 
 # listen to all three tones and display instructions
 welcome(WIN, BLOCK_NUM) 
-hear_tones(WIN, TONE_LEN, FREQS)
-instructions(WIN, SCORE_NEEDED)
+if BLOCK_NUM == "1":
+    hear_tones(WIN, TONE_LEN, FREQS)
+    instructions(WIN, SCORE_NEEDED)
 
 # practice trial
-while score < 1:
-    target = random.choice(FREQS)
+practice_score = 0
+if BLOCK_NUM == "1":
+    while practice_score < PRACTICE_SCORE_NEEDED:
+        target = random.choice(FREQS)
 
-    # Play target
-    n_target_plays = play_target(WIN, TONE_LEN, target)
-    ready(WIN)
-    WaitSecs(1)
+        # Play target
+        n_target_plays = play_target(WIN, TONE_LEN, target)
+        ready(WIN)
+        WaitSecs(1)
 
-    # Play tones
-    fixation(WIN)
-    WaitSecs(1)
-    if predictable:
-        tone_nums, freqs, marks, is_targets, n_targets = play_predictable_sequence(
-            MARKER, FREQS, TONE_LEN, ISI, PATTERN, predictable, target, 30)
-    else:
-        tone_nums, freqs, marks, is_targets, n_targets = play_random_sequence(
-            MARKER, FREQS, TONE_LEN, ISI, predictable, target, 30)
-    WIN.flip()
-    WaitSecs(0.5)
+        # Play tones
+        fixation(WIN)
+        WaitSecs(1)
+        if predictable:
+            tone_nums, freqs, marks, is_targets, n_targets = play_predictable_sequence(
+                MARKER, FREQS, TONE_LEN, ISI, PATTERN, predictable, target, 30)
+        else:
+            tone_nums, freqs, marks, is_targets, n_targets = play_random_sequence(
+                MARKER, FREQS, TONE_LEN, ISI, predictable, target, 30)
+        WIN.flip()
+        WaitSecs(0.5)
 
-    # Get response
-    response = get_response(WIN)
-    correct, score = update_score(WIN, n_targets, response, score, 1)
-
-end_practice(WIN)
+        # Get response
+        response = get_response(WIN)
+        correct, practice_score = update_score(WIN, n_targets, response, practice_score, 1)
+    end_practice(WIN)
     
 # experiment block
 # play sequences until SCORE_NEEDED is reached or seq_num >= 25
-if seq_num == 0:
-    score = 0
 while score < SCORE_NEEDED:
     n_tones = get_n_tones(SEQ_LENS)
     target = random.choice(FREQS)
     print(f'target: {target}')
-    score += 1
 
     # Play target
     n_target_plays = play_target(WIN, TONE_LEN, target)
@@ -105,8 +105,8 @@ while score < SCORE_NEEDED:
     WaitSecs(0.5)
 
     # Get response
-    response = get_response(WIN)
     print(f'n_targets: {n_targets}')
+    response = get_response(WIN)
     print(f'response: {response}')
     correct, score = update_score(WIN, n_targets, response, score, SCORE_NEEDED)
     print(f'score: {score}')
