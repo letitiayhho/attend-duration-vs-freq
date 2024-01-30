@@ -11,15 +11,17 @@ FREQS = [110, 150, 210]
     # where A is predictability where random = 1, predictable = 2
     # where B is tone number where 110 = 1, 150 = 2, 210 = 3
 PATTERN = [FREQS[0], FREQS[0], FREQS[1], FREQS[1], FREQS[2], FREQS[2]]
-SEQ_LENS = [46, 50, 54]
+SEQ_LEN_MIN = 42
+SEQ_LEN_MAX = 50
 TONE_LEN = 0.3
-ISI = 0.3
-SCORE_NEEDED = 25
+ISI = 0.2
+SCORE_NEEDED = 24
 PRACTICE_SCORE_NEEDED = 1
 
 # ask for subject and block number
 SUB_NUM = input("Input subject number: ")
 BLOCK_NUM = input("Input block number (1-4): ")
+TUTORIAL = input("Run tutorial and instructions (y/n)? ")
 
 # set subject number and block as seed
 SEED = int(SUB_NUM + "0" + BLOCK_NUM)
@@ -44,12 +46,12 @@ seq_num = get_seq_num(LOG)
 print(f"seq_num: {seq_num}")
 
 # randomly select condition
-predictability_order = get_predictability_order()
-predictable = predictability_order[int(BLOCK_NUM) - 1] # boolean
+predictable = get_predictability_order(SUB_NUM, BLOCK_NUM)
+print(f'predictable: {predictable}')
 
 # listen to all three tones and display instructions
 welcome(WIN, BLOCK_NUM) 
-if BLOCK_NUM == "1":
+if TUTORIAL == "y":
     hear_tones(WIN, TONE_LEN, FREQS)
     instructions(WIN, SCORE_NEEDED)
 
@@ -84,7 +86,7 @@ if BLOCK_NUM == "1":
 # experiment block
 # play sequences until SCORE_NEEDED is reached or seq_num >= 25
 while score < SCORE_NEEDED:
-    n_tones = get_n_tones(SEQ_LENS)
+    n_tones = random.randint(SEQ_LEN_MIN, SEQ_LEN_MAX)
     target = random.choice(FREQS)
     print(f'target: {target}')
 
@@ -110,7 +112,6 @@ while score < SCORE_NEEDED:
     print(f'response: {response}')
     correct, score = update_score(WIN, n_targets, response, score, SCORE_NEEDED)
     print(f'score: {score}')
-    seq_num += 1
     print(f'seq_num: {seq_num}')
 
     # Write log file
@@ -118,8 +119,9 @@ while score < SCORE_NEEDED:
               freqs, marks, is_targets, n_targets, response, correct, score)
     WaitSecs(1)
     
-    # Break if more than 25 sequences have been played
-    if seq_num >= 25:
+    # Break if 3 extra sequences have been played
+    seq_num += 1
+    if seq_num >= SCORE_NEEDED + 3:
         break
         
 block_end(WIN, BLOCK_NUM)

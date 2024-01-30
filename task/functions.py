@@ -28,21 +28,22 @@ def open_log(SUB_NUM, BLOCK_NUM):
     if not os.path.isfile(log): # create log file if it doesn't exist
         print(f"Creating {log}")
         d = {
-            'seed': [],
-            'sub_num': [],
-            'block_num': [],
-            'seq_num': [],
-            'target': [],
-            'n_target_plays': [],
-            'tone_num': [],
-            'freq': [],
-            'mark': [],
-            'is_target': [],
-            'n_targets': [],
-            'response': [],
-            'correct': [],
-            'score': [],
-            }
+        'seed': [],
+        'sub_num': [],
+        'block_num': [],
+        'predictable': [],
+        'seq_num': [],
+        'target': [],
+        'n_target_plays': [],
+        'tone_num' : [],
+        'freq': [],
+        'mark': [],
+        'is_target': [],
+        'n_targets': [],
+        'response': [],
+        'correct': [],
+        'score': [],
+        }
         print(d)
         df = pd.DataFrame(data = d)
         df.to_csv(log, mode='w', index = False)
@@ -68,14 +69,11 @@ def get_seq_num(LOG):
     seq_num = int(seq_num)
     return(seq_num)
 
-def get_predictability_order():
+def get_predictability_order(SUB_NUM, BLOCK_NUM):
     predictability_orders = [(True, False, True, False), (False, True, False, True)]
-    predictability_order = random.choice(predictability_orders)
-    return predictability_order
-
-def get_n_tones(SEQ_LENS):
-    n_tones = random.choice(SEQ_LENS)
-    return(n_tones)
+    predictability_order = predictability_orders[int(SUB_NUM)%2]
+    predictable = predictability_order[int(BLOCK_NUM) - 1] # boolean
+    return predictable
 
 def fixation(WIN):
     fixation = visual.TextStim(WIN, '+')
@@ -87,7 +85,7 @@ def welcome(WIN, BLOCK_NUM):
     if BLOCK_NUM == '1':
         welcome_text = visual.TextStim(WIN, text = f"Welcome to the study. Press 'enter' to continue.")
     else:
-        welcome_text = visual.TextStim(WIN, text = f"Welcome to block number {BLOCK_NUM}/4. Please remember to minimize any movement and blinks. Please keep your gaze fixed on the + when it appears. Press 'enter' to begin.")
+        welcome_text = visual.TextStim(WIN, text = f"Welcome to block number {BLOCK_NUM}/4. Please remember to minimize any movement and blinks. In some blocks the tones will appear in a pattern, in others they will be random. Please keep your gaze fixed on the + when it appears. Press 'enter' to begin.")
     welcome_text.draw()
     WIN.flip()
     event.waitKeys(keyList = ['return'])
@@ -130,7 +128,7 @@ def instructions(WIN, SCORE_NEEDED):
     WIN.flip()
     print('instruction1')
     
-    instruction2_text = visual.TextStim(WIN, text = f"At the end of each trial you will be asked how many times you heard the target tone during the trial. Use the number keys at the top of the keyboard to input your answer and then press 'enter' to submit it. Press 'enter' to continue...")
+    instruction2_text = visual.TextStim(WIN, text = f"In some blocks the tones will be played in a pattern, in others they will be random. At the end of each trial you will be asked how many times you heard the target tone during the trial. Use the number keys at the top of the keyboard to input your answer and then press 'enter' to submit it. Press 'enter' to continue...")
     event.clearEvents(eventType = None)
     instruction2_text.draw()
     WIN.flip()
