@@ -303,28 +303,7 @@ def play_predictable_sequence(MARKER, FREQS, TONE_LEN, ISI, PATTERN, predictable
     return(tone_nums, freqs, marks, is_targets, n_targets)
 
 def get_mark(FREQS, predictable, target, i):
-    # three values: ABC
-    # A: predictable is True, then A = 2
-    # 	 predictable is False, then mark A = 1
-    # B: if target tone is 110 Hz then B = 1
-    #    if target tone is 150 Hz B = 2
-    #    if target tone is 150, B = 2
-    # C: if tone is 110 Hz then C = 1
-    #    if tone is 150 Hz then C = 2
-    #    if tone is 210 Hz then C = 3
-
-    # Get A
-    #predictable_mark = int(predictable) + 1 
-
-    # Get B
-    #target_mark = FREQS.index(target) + 1
-
-    # Get C
-    #tone_mark = i + 1
-    #mark = int(str(predictable_mark) + str(target_mark) + str(tone_mark))
-    #return(mark)
-
-    # three values: ABC
+    # two values: AB
     # A: predictable is True, and target is 110 Hz then A = 1
     # 	 predictable is True, and target is 150 Hz then mark A = 2
     # 	 predictable is True, and target is 210 Hz then mark A = 3
