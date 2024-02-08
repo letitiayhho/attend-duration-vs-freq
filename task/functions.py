@@ -254,7 +254,7 @@ def get_predictable_sequence(FREQS, PATTERN, target, n_tones):
     # Generate patterns from the starting index
     for i, tone in enumerate(PATTERN):
         if start_i == i:
-            sequence = list(islice(cycle(PATTERN), i+1, i+1+n_tones))
+            sequence = list(islice(cycle(PATTERN), i, i+n_tones))
             
     print(f'sequence: {sequence}')
     return sequence
