@@ -1,4 +1,4 @@
-name: pitch-tracking
+name: mne
 channels:
   - conda-forge
   - defaults

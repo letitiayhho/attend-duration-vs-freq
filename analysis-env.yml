@@ -1,4 +1,4 @@
-name: psychopy
+name: mne
 channels:
   - conda-forge
   - defaults
