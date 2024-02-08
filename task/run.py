@@ -57,7 +57,7 @@ if TUTORIAL == "y":
 
 # practice trial
 practice_score = 0
-if BLOCK_NUM == "1":
+if TUTORIAL == "y":
     while practice_score < PRACTICE_SCORE_NEEDED:
         target = random.choice(FREQS)
 
