@@ -6,14 +6,18 @@ from events import EventMarker
 from functions import *
 
 # constants
-FREQS = [110, 150, 210]
-    # Tags should be AB,
-    # where A is predictability where random = 1, predictable = 2
-    # where B is tone number where 110 = 1, 150 = 2, 210 = 3
-PATTERN = [FREQS[0], FREQS[0], FREQS[1], FREQS[1], FREQS[2], FREQS[2]]
+STIM = { # keys are event markers, first value is freq, second is duration
+    11: [130, 0.2],
+    12: [130, 0.4],
+    21: [210, 0.2],
+    22: [210, 0.4]
+    }
+DISTRACTOR_FREQS = [150, 170, 190]
+DISTRACTOR_DURS = [0.25, 0.3, 0.35]
+DISTRACTOR_PROB = 1/7
+
 SEQ_LEN_MIN = 42
 SEQ_LEN_MAX = 50
-TONE_LEN = 0.3
 ISI = 0.2
 SCORE_NEEDED = 24
 PRACTICE_SCORE_NEEDED = 1
@@ -29,14 +33,13 @@ print("Current seed: " + str(SEED))
 random.seed(SEED)
 
 # set up keyboard, window and RTBox
-WIN = visual.Window(#size = (1600, 900) # 1600, 900
-    screen = -1,
-    units = "norm",
-    fullscr = True,
-    pos = (0, 0),
-    allowGUI = False)
-#KB = get_keyboard('Dell USB Keyboard')
-MARKER = EventMarker()
+# WIN = visual.Window(#size = (1600, 900) # 1600, 900
+#     screen = -1,
+#     units = "norm",
+#     fullscr = True,
+#     pos = (0, 0),
+#     allowGUI = False)
+# MARKER = EventMarker()
 
 # open log file
 LOG = open_log(SUB_NUM, BLOCK_NUM)
@@ -46,8 +49,10 @@ seq_num = get_seq_num(LOG)
 print(f"seq_num: {seq_num}")
 
 # randomly select condition
-predictable = get_predictability_order(SUB_NUM, BLOCK_NUM)
+COND = get_condition(SUB_NUM, BLOCK_NUM)
 print(f'predictable: {predictable}')
+TONES = get_tones(STIM)
+TARGET_MARKS = get_target_marks(COND)
 
 # listen to all three tones and display instructions
 welcome(WIN, BLOCK_NUM) 
@@ -59,7 +64,6 @@ if TUTORIAL == "y":
 practice_score = 0
 if TUTORIAL == "y":
     while practice_score < PRACTICE_SCORE_NEEDED:
-        target = random.choice(FREQS)
 
         # Play target
         n_target_plays = play_target(WIN, TONE_LEN, target)
@@ -69,12 +73,8 @@ if TUTORIAL == "y":
         # Play tones
         fixation(WIN)
         WaitSecs(1)
-        if predictable:
-            tone_nums, freqs, marks, is_targets, n_targets = play_predictable_sequence(
-                MARKER, FREQS, TONE_LEN, ISI, PATTERN, predictable, target, 30)
-        else:
-            tone_nums, freqs, marks, is_targets, n_targets = play_random_sequence(
-                MARKER, FREQS, TONE_LEN, ISI, predictable, target, 30)
+        tone_nums, freqs, marks, is_targets, n_targets = play_sequence(
+            MARKER, FREQS, TONE_LEN, ISI, predictable, target, 30)
         WIN.flip()
         WaitSecs(0.5)
 
@@ -87,7 +87,6 @@ if TUTORIAL == "y":
 # play sequences until SCORE_NEEDED is reached or seq_num >= 25
 while score < SCORE_NEEDED:
     n_tones = random.randint(SEQ_LEN_MIN, SEQ_LEN_MAX)
-    target = random.choice(FREQS)
     print(f'target: {target}')
 
     # Play target
@@ -98,12 +97,8 @@ while score < SCORE_NEEDED:
     # Play tones
     fixation(WIN)
     WaitSecs(1)
-    if predictable:
-        tone_nums, freqs, marks, is_targets, n_targets = play_predictable_sequence(
-            MARKER, FREQS, TONE_LEN, ISI, PATTERN, predictable, target, n_tones)
-    else:
-        tone_nums, freqs, marks, is_targets, n_targets = play_random_sequence(
-            MARKER, FREQS, TONE_LEN, ISI, predictable, target, n_tones)
+    tone_nums, freqs, marks, is_targets, n_targets = play_sequence(
+            MARKER, STIM, ISI, TARGET_MARKS, n_tones)
     WaitSecs(0.5)
 
     # Get response
@@ -115,13 +110,13 @@ while score < SCORE_NEEDED:
     print(f'seq_num: {seq_num}')
 
     # Write log file
-    write_log(LOG, n_tones, SEED, SUB_NUM, BLOCK_NUM, predictable, seq_num, target, n_target_plays, tone_nums,
-              freqs, marks, is_targets, n_targets, response, correct, score)
+    write_log(LOG, n_tones, SEED, SUB_NUM, BLOCK_NUM, cond, seq_num, target, n_target_plays, tone_nums,
+              freqs, durs, marks, is_targets, n_targets, response, correct, score)
     WaitSecs(1)
     
     # Break if 3 extra sequences have been played
     seq_num += 1
-    if seq_num >= SCORE_NEEDED + 3:
+    if seq_num >= SCORE_NEEDED + 4:
         break
         
 block_end(WIN, BLOCK_NUM)

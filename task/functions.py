@@ -31,12 +31,13 @@ def open_log(SUB_NUM, BLOCK_NUM):
         'seed': [],
         'sub_num': [],
         'block_num': [],
-        'predictable': [],
+        'cond': [],
         'seq_num': [],
         'target': [],
         'n_target_plays': [],
         'tone_num' : [],
         'freq': [],
+        'dur': [],
         'mark': [],
         'is_target': [],
         'n_targets': [],
@@ -69,11 +70,12 @@ def get_seq_num(LOG):
     seq_num = int(seq_num)
     return(seq_num)
 
-def get_predictability_order(SUB_NUM, BLOCK_NUM):
-    predictability_orders = [(True, False, True, False), (False, True, False, True)]
-    predictability_order = predictability_orders[int(SUB_NUM)%2]
-    predictable = predictability_order[int(BLOCK_NUM) - 1] # boolean
-    return predictable
+def get_condition(SUB_NUM, BLOCK_NUM):
+    conditions = ['short', 'low', 'long', 'high']
+    n = SUB_NUM % 4
+    cond_list = list(islice(cycle(conditions), n, n+4))
+    cond = cond_list[int(BLOCK_NUM)]
+    return cond
 
 def fixation(WIN):
     fixation = visual.TextStim(WIN, '+')
@@ -90,37 +92,49 @@ def welcome(WIN, BLOCK_NUM):
     WIN.flip()
     event.waitKeys(keyList = ['return'])
 
-def hear_tones(WIN, TONE_LEN, FREQS):
-    p1 = Sound(FREQS[0], secs = TONE_LEN)
-    p2 = Sound(FREQS[1], secs = TONE_LEN)
-    p3 = Sound(FREQS[2], secs = TONE_LEN)
+def get_distractor(DISTRACTOR_FREQS, DISTRACTOR_DURS):
+    freq = random.choice(DISTRACTOR_FREQS)
+    dur = random.choice(DISTRACTOR_DURS)
+    return(freq, dur)
 
-    p1_txt = visual.TextStim(WIN, text = "You will be listening to random sequences of three different tones. You will now hear a sample of each of the three tones. Press 'enter' to hear the first tone now.")
+def hear_tones(WIN, STIM, TONES):
+    p1_txt = visual.TextStim(WIN, text = "You will be listening to random sequences of different tones. The tones may vary in pitch and length. Press 'enter' to hear a few examples of these tones")
     p1_txt.draw()
     WIN.flip()
     event.waitKeys(keyList = ['return'])
-    p1.play()
+    Snd = Sound(STIM[11][0], secs = STIM[11][1])
+    Snd.play()
     core.wait(1)
 
-    p2_txt = visual.TextStim(WIN, text = "Press 'enter' to hear second tone.")
+    p2_txt = visual.TextStim(WIN, text = "Press 'enter' to hear the next tone.")
     event.clearEvents(eventType = None)
     p2_txt.draw()
     WIN.flip()
     event.waitKeys(keyList = ['return'])
-    p2.play()
+    Snd = Sound(STIM[12][0], secs = STIM[12][1])
+    Snd.play()
     core.wait(1)
 
-    p3_txt = visual.TextStim(WIN, text = "Press 'enter' to hear third tone.")
-
+    p3_txt = visual.TextStim(WIN, text = "Press 'enter' to hear the next tone.")
     event.clearEvents(eventType = None)
     p3_txt.draw()
     WIN.flip()
     event.waitKeys(keyList = ['return'])
-    p3.play()
+    Snd = Sound(STIM[21][0], secs = STIM[21][1])
+    Snd.play()
+    core.wait(1)
+    
+    p4_txt = visual.TextStim(WIN, text = "Press 'enter' to hear the next tone.")
+    event.clearEvents(eventType = None)
+    p4_txt.draw()
+    WIN.flip()
+    event.waitKeys(keyList = ['return'])
+    Snd = Sound(STIM[22][0], secs = STIM[22][1])
+    Snd.play()
     core.wait(1)
 
 def instructions(WIN, SCORE_NEEDED):
-    instruction1_text = visual.TextStim(WIN, text = "At the beginning of each trial, one of the three tones will be randomly selected to be the 'target tone'. You will be asked to count the number of times you hear the target tone. At the beginning of each trial you will get the chance to listen to the target tone as many times as you like. Press 'enter' to continue...")
+    instruction1_text = visual.TextStim(WIN, text = "In each block, you will be asked to count the number of times you hear a tone of either a specific duration, or a specific pitch, in each trial. You will get a chance to listen to examples of the target tone at the beginning of each trial. Press 'enter' to continue...")
     event.clearEvents(eventType = None)
     instruction1_text.draw()
     WIN.flip()
@@ -128,7 +142,7 @@ def instructions(WIN, SCORE_NEEDED):
     WIN.flip()
     print('instruction1')
     
-    instruction2_text = visual.TextStim(WIN, text = f"In some blocks the tones will be played in a pattern, in others they will be random. At the end of each trial you will be asked how many times you heard the target tone during the trial. Use the number keys at the top of the keyboard to input your answer and then press 'enter' to submit it. Press 'enter' to continue...")
+    instruction2_text = visual.TextStim(WIN, text = f"At the end of each trial you will be asked how many times you heard the target tone during the trial. Use the number keys at the top of the keyboard to input your answer and then press 'enter' to submit it. Press 'enter' to continue...")
     event.clearEvents(eventType = None)
     instruction2_text.draw()
     WIN.flip()
@@ -136,7 +150,7 @@ def instructions(WIN, SCORE_NEEDED):
     WIN.flip()
     print('instruction2')
     
-    instruction3_text = visual.TextStim(WIN, text = f"At the end of each trial you will be asked how many times you heard the target tone during the trial. If you accurately report the number of target tones– or come close to the actual number of target tones by 2– your 'score' will increase by 1. To finish each block, you will have to reach a score of {SCORE_NEEDED}. There will be 4 total blocks. Please ask your experimenter any questions you may have about the task. Press 'enter' to continue...")
+    instruction3_text = visual.TextStim(WIN, text = f"If you accurately report the number of target tones– or come close to the actual number of target tones by 2– your 'score' will increase by 1. To finish each block, you will have to reach a score of {SCORE_NEEDED}. There will be 4 total blocks. Please ask your experimenter any questions you may have about the task. Press 'enter' to continue...")
     event.clearEvents(eventType = None)
     instruction3_text.draw()
     WIN.flip()
@@ -168,11 +182,24 @@ def end_practice(WIN):
     event.waitKeys(keyList = ['return'])
     WIN.flip()
     print('end_practice')
-    
-def play_target(WIN, TONE_LEN, target):
-    t_snd = Sound(target, secs = TONE_LEN)
 
-    target_text = visual.TextStim(WIN, text = "Press 'space' to hear the target tone. Press 'enter' to continue")
+def get_target_marks(COND):
+    if COND == 'short':
+        marks = [11, 21]
+    elif COND == 'low':
+        marks = [11, 12]
+    elif COND == 'long':
+        marks = [12, 22]
+    elif COND == 'high:
+        marks = [21, 22]
+    return(marks)
+    
+def play_target(WIN, COND, STIM):
+    # Get target sound objects
+    target_marks = get_targets(COND)
+    t_snds = [STIM[target_marks[0]], STIM[target_marks[1]]
+
+    target_text = visual.TextStim(WIN, text = f"Please listen for the {cond} tones. Press 'space' to hear examples of a {cond} tone. Press 'enter' to begin the trial.")
     target_text.draw()
     WIN.flip()
     target_played = False
@@ -180,6 +207,7 @@ def play_target(WIN, TONE_LEN, target):
     while True:
         keys = event.getKeys(keyList = ['space', 'return'])
         if 'space' in keys:
+            t_snd = random.choice(t_snds)
             t_snd.play()
             target_played = True
             n_target_plays += 1
@@ -189,154 +217,71 @@ def play_target(WIN, TONE_LEN, target):
 
     return(n_target_plays)
 
-def ready(WIN):
-    block_begin = visual.TextStim(WIN, text = "Please count how many times you hear the target tone. Press 'enter' to begin!")
-    block_begin.draw()
-    WIN.flip()
-    event.waitKeys(keyList = ['return'])
-    WIN.flip()
-
-def play_random_sequence(MARKER, FREQS, TONE_LEN, ISI, predictable, target, n_tones):
+def play_sequence(MARKER, STIM, ISI, TARGET_MARKS, n_tones):
     n_targets = 0
     force = False
     one_back = 0
     two_back = 0
 
     # play first tone
-    tone_nums, freqs, marks, is_targets = play_first_tone(MARKER, FREQS, TONE_LEN, ISI, predictable, target)
+    tone_nums, freqs, durs, marks, is_targets = play_first_tone(MARKER, STIM, target_marks)
 
     for tone_num in range(2, n_tones + 1):
         print(tone_num, end = ', ', flush = True)
 
-        # select tone
-        if not force:
-            i = random.randint(0, len(FREQS)-1)
-        freq = FREQS[i]
-        mark = get_mark(FREQS, predictable, target, i)
-        snd = Sound(freq, secs = TONE_LEN)
+        # if not force, select a random tone
+        if force:
+            force, mark, one_back, two_back = check_repeats(STIM, mark, one_back, two_back)
+        else:
+            mark = random.choice(list(STIM.keys()))
+
+        # decide if random distractor tone is playing
+        if random.random() > 0.125:
+            freq = STIM[mark][0]
+            dur = STIM[mark][1]
+        else:
+            freq, dur = get_distractor(DISTRACTOR_FREQS, DISTRACTOR_DURS)
+        snd = Sound(freq, secs = dur)
 
         # increment target count
-        is_target, n_targets = check_target(freq, target, n_targets)
+        is_target = 0
+        if mark in TARGET_MARKS:
+            is_target = 1
+            n_targets += 1
 
         # schedule sound
         now = GetSecs()
         snd.play(when = now + 0.1)
         WaitSecs(0.1)
         MARKER.send(mark)
-        WaitSecs(TONE_LEN)
+        WaitSecs(ISI - 0.1) # subtract buffer
 
-        # Add ISI - buffer + jitter
-        WaitSecs(ISI - 0.1 + random.uniform(0, 0.05))
-
-        # save tone info
-        tone_nums.append(tone_num)
-        freqs.append(freq)
-        marks.append(mark)
-        is_targets.append(is_target)
-
-        # check for repeats
-        force, i, one_back, two_back = check_repeats(FREQS, freq, one_back, two_back)
-
-    print('')
-    return(tone_nums, freqs, marks, is_targets, n_targets)
-
-def get_starting_point(pattern, target):
-    i = random.randint(0, len(pattern)-1)
-    while pattern[i] == target:
-        i = random.randint(0, len(pattern)-1)
-    return i
-
-def get_predictable_sequence(FREQS, PATTERN, target, n_tones):
-    
-    # Pick a random starting point that is not the target tone
-    start_i = get_starting_point(PATTERN, target)
-            
-    # Generate patterns from the starting index
-    for i, tone in enumerate(PATTERN):
-        if start_i == i:
-            sequence = list(islice(cycle(PATTERN), i, i+n_tones))
-            
-    print(f'sequence: {sequence}')
-    return sequence
-    
-def play_predictable_sequence(MARKER, FREQS, TONE_LEN, ISI, PATTERN, predictable, target, n_tones):
-    n_targets = 0
-    force = False
-    one_back = 0
-    two_back = 0
-    
-    tone_nums = []
-    freqs = []
-    marks = []
-    is_targets = []
-    
-    sequence = get_predictable_sequence(FREQS, PATTERN, target, n_tones)
-    tone_num = 1
-    for freq in sequence:
-        print(tone_num, end = ', ', flush = True)
-        mark = get_mark(FREQS, predictable, target, FREQS.index(freq))
-        snd = Sound(freq, secs = TONE_LEN)
-
-        # increment target count
-        is_target, n_targets = check_target(freq, target, n_targets)
-
-        # schedule sound
-        now = GetSecs()
-        snd.play(when = now + 0.1)
-        WaitSecs(0.1)
-        MARKER.send(mark)
-        WaitSecs(TONE_LEN)
-
-        # Add ISI - buffer + jitter
-        WaitSecs(ISI - 0.1 + random.uniform(0, 0.05))
+        # Add jitter
+        WaitSecs(random.uniform(0, 0.05))
 
         # save tone info
         tone_nums.append(tone_num)
         freqs.append(freq)
+        durs.append(dur)
         marks.append(mark)
         is_targets.append(is_target)
-        
-        # increment tone number
-        tone_num += 1
 
     print('')
     return(tone_nums, freqs, marks, is_targets, n_targets)
 
-def get_mark(FREQS, predictable, target, i):
-    # two values: AB
-    # A: predictable is True, and target is 110 Hz then A = 1
-    # 	 predictable is True, and target is 150 Hz then mark A = 2
-    # 	 predictable is True, and target is 210 Hz then mark A = 3
-    # 	 predictable is False, and target is 110 Hz then mark A = 4
-    # 	 predictable is False, and target is 150 Hz then mark A = 5
-    # 	 predictable is False, and target is 210 Hz then mark A = 6
-    # B: if tone is 110 Hz then C = 1
-    #    if tone is 150 Hz then C = 2
-    #    if tone is 210 Hz then C = 3
-
-    # Get A
-    target_mark = FREQS.index(target) + 1
-    if predictable:
-        predictable_and_target_mark = target_mark
-    else:
-        predictable_and_target_mark = 3 + target_mark
-
-    # Get B
-    tone_mark = i + 1
-    mark = int(str(predictable_and_target_mark) + str(tone_mark))
-    return(mark)
-
-def play_first_tone(MARKER, FREQS, TONE_LEN, ISI, predictable, target):
+def play_first_tone(MARKER, STIM, ISI, target_marks):
     print('1', end = ', ', flush = True)
 
-    indexes = [1, 2]
-    i = random.choice(indexes)
-    freq = FREQS[i]
-    mark = get_mark(FREQS, predictable, target, i)
+    first_tone_mark = 11
+    while first_tone_mark in target_marks:
+        first_tone_mark = random.choice(list(STIM.keys()))
+    freq = STIM[first_tone_mark][0]
+    dur = STIM[first_tone_mark][1]
+    snd = Sound(freq, secs = dur) 
 
     # schedule sound
     now = GetSecs()
-    snd = Sound(freq, secs = TONE_LEN)
+    snd = Sound(freq, secs = dur)
     snd.play(when = now + 0.1) # 0.1 msec buffer
     WaitSecs(0.1)
     MARKER.send(mark)
@@ -347,51 +292,44 @@ def play_first_tone(MARKER, FREQS, TONE_LEN, ISI, predictable, target):
 
     tone_nums = [1]
     freqs = [freq]
+    durs = [dur]
     marks = [mark]
     is_targets = [0]
 
-    return(tone_nums, freqs, marks, is_targets)
+    return(tone_nums, freqs, durs, marks, is_targets)
 
-def check_target(freq, target, n_targets):
-    if freq == target:
-        is_target = 1
-        n_targets += 1
-    else:
-        is_target = 0
-    return(is_target, n_targets)
-
-def check_repeats(FREQS, freq, one_back, two_back):
-    if freq == one_back == two_back:
+def check_repeats(STIM, mark, one_back, two_back): # CHECK THIS
+    if mark == one_back == two_back:
         force = True
-        drop = FREQS.index(freq)
-        indexes = [0, 1, 2]
-        indexes.pop(drop)
-        i = random.choice(indexes)
+        replacement_mark = 11
+        while replacement_mark == one_back:
+            replacement_mark = random.choice(list(STIM.keys()))
     else:
         force = False
-        i = None
+        replacement_mark = None
     two_back = one_back
-    one_back = freq
-    return(force, i, one_back, two_back)
+    one_back = mark
+    return(force, replacement_mark, one_back, two_back)
 
 def broadcast(n_tones, var):
     if not isinstance(var, list):
         broadcasted_array = [var]*n_tones
     return(broadcasted_array)
 
-def write_log(LOG, n_tones, SEED, SUB_NUM, BLOCK_NUM, predictable, seq_num, target, n_target_plays, 
-              tone_nums, freqs, marks, is_targets, n_targets, response, correct, score):
+def write_log(LOG, n_tones, SEED, SUB_NUM, BLOCK_NUM, cond, seq_num, target, n_target_plays, 
+              tone_nums, freqs, durs, marks, is_targets, n_targets, response, correct, score):
     print("Writing to log file")
     d = {
         'seed': broadcast(n_tones, SEED),
         'sub_num': broadcast(n_tones, SUB_NUM),
         'block_num': broadcast(n_tones, BLOCK_NUM),
-        'predictable': broadcast(n_tones, predictable),
+        'cond': broadcast(n_tones, predictable),
         'seq_num': broadcast(n_tones, seq_num),
         'target': broadcast(n_tones, target),
         'n_target_plays': broadcast(n_tones, n_target_plays),
         'tone_num' : tone_nums,
         'freq': freqs,
+        'dur': durs,
         'mark': marks,
         'is_target': is_targets,
         'n_targets': broadcast(n_tones, n_targets),
@@ -454,7 +392,7 @@ def update_score(WIN, n_targets, response, score, SCORE_NEEDED):
     return(correct, score)
 
 def block_end(WIN, BLOCK_NUM):
-    if BLOCK_NUM == "6":
+    if BLOCK_NUM == "4":
         block_end_text = visual.TextStim(WIN, text = f"Congratulations, you have completed the experiment! Your experimenter will be with you shortly. Thank you for participating.")
     else:
         block_end_text = visual.TextStim(WIN, text = f"Congratulations, you have completed the experiment block. Your experimenter will be with you shortly.")
