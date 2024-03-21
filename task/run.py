@@ -34,14 +34,12 @@ random.seed(SEED)
 
 # set up keyboard, window and RTBox
 WIN = visual.Window(
-    size = (500, 300), # comment out and set fullscr = True
     screen = -1,
     units = "norm",
-    fullscr = False,
+    fullscr = True,
     pos = (0, 0),
     allowGUI = False)
-# MARKER = EventMarker()
-MARKER = None
+MARKER = EventMarker()
 
 # open log file
 LOG = open_log(SUB_NUM, BLOCK_NUM)

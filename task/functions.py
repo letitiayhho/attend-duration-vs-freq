@@ -228,7 +228,7 @@ def play_sequence(MARKER, STIM, ISI, TARGET_MARKS, DISTRACTOR_PROB, DISTRACTOR_F
         now = GetSecs()
         snd.play(when = now + 0.1)
         WaitSecs(0.1)
-#         MARKER.send(mark)
+        MARKER.send(mark)
         WaitSecs(dur)
     
         # ISI
@@ -262,7 +262,7 @@ def play_first_tone(MARKER, STIM, ISI, target_marks):
     snd = Sound(freq, secs = dur)
     snd.play(when = now + 0.1) # 0.1 msec buffer
     WaitSecs(0.1)
-#     MARKER.send(mark)
+    MARKER.send(mark)
     WaitSecs(dur)
 
     # Add ISI - buffer + jitter
